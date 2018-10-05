@@ -25,6 +25,7 @@
     "test": "./node_modules/vows/bin/vows"
   },
   "dependencies": {
+    "bloom-filters": "^0.5.2",
     "csv": "^3.1.0",
     "csv-parse": "^3.0.0",
     "jquery": "^3.3.1",

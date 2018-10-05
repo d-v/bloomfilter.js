@@ -1,10 +1,27 @@
 var bf = require("../bloomfilter"),
 $ = require('jquery'),
-BloomFilter = bf.BloomFilter,
 fnv_1a = bf.fnv_1a,
 csv = require('csv'),
 fs = require('fs'),
 parse = require('csv-parse');
+
+let max_array_size = 1000000;
+
+const { BloomFilter } = require('bloom-filters')
+let filter = new BloomFilter(max_array_size, 0.01)
+var fs = require('fs');
+
+try {
+  content = fs.readFileSync('majestic_million.json');
+  var jsonContent = JSON.parse(content);
+  const importedFilter = BloomFilter.fromJSON(jsonContent);
+} catch (err) {
+  if (err.code === 'ENOENT') {
+    console.log('File not found!');
+  } else {
+    console.log('other error!');
+  }
+}
 
 var vows = require("vows"),
 assert = require("assert");
@@ -15,29 +32,28 @@ var suite = vows.describe("bloomfilter");
 
 var domains = new Array();
 
+console.log("adding domains");
+
 var parser = parse({delimiter: ','}, function (err, data) {
-  console.log("adding domains");
-  data.forEach(function(line) {
+  var i = 0;
+  data.some(function(line) {
+    if(i == max_array_size) return true;
     domains.push(line[2]);
+    i++;
   });
   console.log("finished adding domains");
   suite.addBatch({
     "bloom filter": {
-      "basic": function() {
-        var f = new BloomFilter(1000, 4),
-        n1 = "Bess",
-        n2 = "Jane";
-        f.add(n1);
-        assert.equal(f.test(n1), true);
-        assert.equal(f.test(n2), false);
-      },
       "majestic": function() {
-        var m = new BloomFilter(700000000, 100);
-        for (var i = 0; i < domains.length; i++) {
-          m.add(domains[i]);
-        }
-        assert.equal(m.test("google.com"), true);
-        assert.equal(m.test("thisisafakedomain"), false);
+        filter = BloomFilter.from(domains, .01);
+        console.log(filter.has('bob'));
+        console.log(filter.has('google.com'));
+        const exported = filter.saveAsJSON();
+        console.log(filter);
+        fs.writeFile ("majestic_million.json", JSON.stringify(exported), function(err) {
+          if (err) throw err;
+          console.log('complete');
+        });
       }
     }
   });
