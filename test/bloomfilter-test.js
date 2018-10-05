@@ -15,11 +15,11 @@ try {
   content = fs.readFileSync('majestic_million.json');
   var jsonContent = JSON.parse(content);
   const importedFilter = BloomFilter.fromJSON(jsonContent);
+  console.log(importedFilter.has('bob'));
+  console.log(importedFilter.has('google.com'));
 } catch (err) {
   if (err.code === 'ENOENT') {
     console.log('File not found!');
-  } else {
-    console.log('other error!');
   }
 }
 
